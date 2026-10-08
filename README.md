@@ -2,6 +2,10 @@
 
 A self-hosted portfolio for infrastructure work. Built with Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui, React Flow and Motion. The architecture follows `docs/architecture.md`.
 
+## SLOP WARNING ⚠️
+
+I do not specialise in frontend, this project is vobe-coded and while I do my best to make it as user-friendly as possible, AI code is AI code
+
 ## Run it
 
 Requires Node 22.9 or newer and git.
