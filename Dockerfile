@@ -12,7 +12,7 @@
 #   docker run -p 3000:3000 -e GITHUB_TOKEN -e GITHUB_WEBHOOK_SECRET portfolio
 
 # Dependabot bumps this tag (it can't follow an ARG).
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 # git: the sync clones repos at build time, and webhook-triggered syncs pull them at runtime.
 # tini: runs as PID 1 so signals reach node and zombie git processes get reaped.
 RUN apk add --no-cache git tini
