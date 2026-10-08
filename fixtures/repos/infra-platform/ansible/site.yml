@@ -1,0 +1,14 @@
+- name: Base configuration for every node
+  hosts: all
+  become: true
+  roles:
+    - base
+
+- name: Container runtime
+  hosts: nodes
+  become: true
+  tasks:
+    - name: Install containerd
+      ansible.builtin.package:
+        name: containerd
+        state: present

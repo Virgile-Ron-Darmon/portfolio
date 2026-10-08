@@ -1,0 +1,13 @@
+# Placeholder identity. Replace with your own details.
+name: Jordan Vale
+handle: jvale
+role: Platform engineer
+tagline: I build the infrastructure other teams ship on, from provisioning and pipelines to the dashboards that say when something is wrong.
+location: London
+links:
+  - label: GitHub
+    url: https://github.com/your-org
+  - label: LinkedIn
+    url: https://www.linkedin.com/in/your-handle
+  - label: Email
+    url: mailto:you@example.com

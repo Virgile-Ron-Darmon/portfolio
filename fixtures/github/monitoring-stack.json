@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "default_branch": "main",
+  "commit_message": "alerts: page on burn rate, not raw error count",
+  "commit_hours_ago": 5,
+  "languages": { "Jsonnet": 44200, "Shell": 21050, "Go": 18300, "Dockerfile": 4100 },
+  "run": { "status": "completed", "conclusion": "success", "name": "lint-and-test", "head_branch": "main", "run_started_at_minutes_ago": 290, "duration_sec": 74 }
+}

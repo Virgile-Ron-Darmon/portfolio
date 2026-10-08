@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "default_branch": "main",
+  "commit_message": "runner: stream step output with stage prefixes",
+  "commit_hours_ago": 1,
+  "languages": { "Go": 88500, "Shell": 7200, "Dockerfile": 4300 },
+  "run": { "status": "in_progress", "conclusion": null, "name": "build", "head_branch": "main", "run_started_at_minutes_ago": 2, "duration_sec": null }
+}

@@ -1,0 +1,213 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+/* Fixture repos are sample content, not source: keep Tailwind from scanning them. */
+@source not "../fixtures";
+
+@theme {
+  --color-bg: #0d0f12;
+  --color-panel: #13161b;
+  --color-panel-2: #191d23;
+  --color-line: #262b33;
+  --color-line-strong: #363d47;
+  --color-fg: #d8dde3;
+  --color-muted: #8a939e;
+  --color-dim: #5b646f;
+  --color-ok: #5fd38d;
+  --color-warn: #f0b75e;
+  --color-fail: #f2685e;
+  --color-link: #8ab4f8;
+  --color-sand: #e6d2a2;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --animate-blink: blink 1.1s steps(1) infinite;
+  --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 55%, transparent); }
+    50% { box-shadow: 0 0 0 5px transparent; }
+  }
+}
+
+/* shadcn/ui tokens, mapped onto the site palette */
+:root {
+  --background: var(--color-bg);
+  --foreground: var(--color-fg);
+  --border: var(--color-line);
+  --ring: var(--color-link);
+  --radius: 6px;
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Faint measurement grid behind the page, fading out below the fold */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-line) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-line) 55%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 70% at 30% 0%, black 20%, transparent 75%);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-link) 35%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+/* ---------- Rendered markdown ---------- */
+.prose-console {
+  max-width: 72ch;
+  color: var(--color-fg);
+}
+.prose-console > * + * { margin-top: 1em; }
+.prose-console h1,
+.prose-console h2,
+.prose-console h3 {
+  font-family: var(--font-mono);
+  color: var(--color-sand);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.prose-console h1 { font-size: 1.6rem; margin-top: 0; }
+.prose-console h2 { font-size: 1.2rem; margin-top: 2em; }
+.prose-console h3 { font-size: 1rem; margin-top: 1.6em; }
+.prose-console h1 + *, .prose-console h2 + *, .prose-console h3 + * { margin-top: 0.6em; }
+.prose-console a[href] { color: var(--color-link); text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--color-link) 40%, transparent); }
+.prose-console a[href]:hover { text-decoration-color: currentColor; }
+.prose-console a:not([href]) { color: var(--color-muted); }
+.prose-console strong { color: #eef1f4; font-weight: 600; }
+.prose-console ul, .prose-console ol { padding-left: 1.3em; }
+.prose-console ul { list-style: none; }
+.prose-console ul > li { position: relative; }
+.prose-console ul > li::before {
+  content: "";
+  position: absolute;
+  left: -1em;
+  top: 0.72em;
+  width: 0.4em;
+  height: 1px;
+  background: var(--color-dim);
+}
+.prose-console ol { list-style: decimal; }
+.prose-console li + li { margin-top: 0.35em; }
+.prose-console :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.prose-console pre {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  background: var(--color-panel) !important;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.prose-console img {
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  max-width: 100%;
+}
+.prose-console table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  display: block;
+  overflow-x: auto;
+}
+.prose-console th, .prose-console td {
+  text-align: left;
+  padding: 8px 14px 8px 0;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: top;
+}
+.prose-console th { color: var(--color-muted); font-weight: 500; }
+.prose-console blockquote {
+  border-left: 2px solid var(--color-line-strong);
+  padding-left: 1em;
+  color: var(--color-muted);
+}
+
+/* ---------- Code viewer ---------- */
+.code-view pre {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  counter-reset: line;
+  padding: 12px 0;
+  background: transparent !important;
+}
+.code-view code { display: block; min-width: max-content; }
+.code-view .line {
+  display: inline-block;
+  width: 100%;
+  padding-right: 24px;
+}
+.code-view .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 3.5em;
+  margin-right: 1.25em;
+  padding-right: 0.75em;
+  text-align: right;
+  color: var(--color-dim);
+  border-right: 1px solid var(--color-line);
+  user-select: none;
+}
+.code-view .line:hover { background: color-mix(in oklab, var(--color-panel-2) 70%, transparent); }
+
+/* ---------- React Flow overrides ---------- */
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-edge-stroke: var(--color-line-strong);
+  --xy-edge-stroke-selected: var(--color-link);
+  --xy-controls-button-background-color: var(--color-panel);
+  --xy-controls-button-background-color-hover: var(--color-panel-2);
+  --xy-controls-button-color: var(--color-muted);
+  --xy-controls-button-border-color: var(--color-line);
+  --xy-attribution-background-color: transparent;
+}
+.react-flow__controls { border: 1px solid var(--color-line); border-radius: 6px; overflow: hidden; box-shadow: none; }
+.react-flow__attribution a { color: var(--color-dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

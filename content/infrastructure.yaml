@@ -1,0 +1,72 @@
+# The diagram on /infrastructure. Positions are in pixels on the canvas.
+# kind: edge | app | service | data | observability | external
+nodes:
+  - id: visitors
+    label: Visitors
+    kind: external
+    x: 0
+    y: 200
+    detail: Everyone reading this page. Requests arrive over HTTPS only.
+  - id: github
+    label: GitHub
+    kind: external
+    x: 0
+    y: 460
+    detail: Sends signed push and workflow_run webhooks. Code, README and language stats refresh on push; CI status refreshes when a run completes.
+  - id: proxy
+    label: Reverse proxy
+    kind: edge
+    tech: Caddy
+    x: 280
+    y: 200
+    detail: Terminates TLS with automatic certificates and routes each hostname to its service.
+  - id: portfolio
+    label: Portfolio
+    kind: app
+    tech: Next.js
+    x: 580
+    y: 40
+    detail: This site. Serves pages from local data and receives GitHub webhooks to trigger syncs.
+  - id: demos
+    label: Demo service
+    kind: app
+    tech: Containers
+    x: 580
+    y: 230
+    detail: Interactive project demos, isolated on their own origin with resource limits and no access to the portfolio's data.
+  - id: grafana
+    label: Grafana
+    kind: observability
+    x: 580
+    y: 420
+    detail: Public dashboards embedded on the metrics page. Anonymous visitors only see dashboards meant to be public.
+  - id: runtime
+    label: Runtime data
+    kind: data
+    tech: /var/portfolio
+    x: 900
+    y: 40
+    detail: Git clones of each project plus one JSON file per project with languages, CI status and the file manifest.
+  - id: prometheus
+    label: Prometheus
+    kind: observability
+    x: 900
+    y: 300
+    detail: Scrapes metrics from the portfolio, the demo service and the host every 15 seconds.
+  - id: loki
+    label: Loki
+    kind: observability
+    x: 900
+    y: 500
+    detail: Collects logs from every container for debugging and alerting.
+edges:
+  - { from: visitors, to: proxy, label: https }
+  - { from: github, to: proxy, label: webhooks }
+  - { from: proxy, to: portfolio }
+  - { from: proxy, to: demos }
+  - { from: proxy, to: grafana }
+  - { from: portfolio, to: runtime, label: read / sync }
+  - { from: portfolio, to: prometheus, label: metrics }
+  - { from: demos, to: prometheus, label: metrics }
+  - { from: grafana, to: prometheus, label: query }
+  - { from: grafana, to: loki, label: query }

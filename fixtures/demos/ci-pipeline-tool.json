@@ -1,0 +1,30 @@
+{
+  "prompt": "demo@runner",
+  "session": [
+    { "cmd": "runner --version", "out": ["runner 0.9.2 (go1.23, linux/amd64)"] },
+    { "cmd": "cat pipeline.yml", "out": [
+      "stages:",
+      "  - name: test",
+      "    steps:",
+      "      - { name: lint, run: golangci-lint run }",
+      "      - { name: unit, run: go test ./... }",
+      "  - name: build",
+      "    steps:",
+      "      - { name: binary, run: go build ./cmd/runner }"
+    ] },
+    { "cmd": "runner run", "out": [
+      "[test/lint]    golangci-lint run",
+      "[test/unit]    go test ./...",
+      "[test/unit]    ok   internal/pipeline  0.412s",
+      "[test/lint]    0 issues",
+      "[build/binary] cache hit, skipping",
+      "",
+      "stage   step     time    result",
+      "test    lint     6.1s    ok",
+      "test    unit     2.3s    ok",
+      "build   binary   0.0s    cached",
+      "",
+      "pipeline passed in 6.4s"
+    ] }
+  ]
+}

@@ -1,0 +1,9 @@
+name: Homelab Platform
+summary: Reusable Terraform modules and Ansible roles that turn a Proxmox host into VMs ready to run Kubernetes.
+github: Virgile-Ron-Darmon/homelab-platform
+order: 2
+
+tabs:
+  - type: description
+    source: readme
+  - type: code

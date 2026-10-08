@@ -1,0 +1,19 @@
+groups:
+  - name: slo
+    rules:
+      # Page when 2% of the monthly error budget burns within an hour.
+      - alert: ErrorBudgetFastBurn
+        expr: |
+          (
+            sum(rate(http_requests_total{code=~"5.."}[1h]))
+            / sum(rate(http_requests_total[1h]))
+          ) > (14.4 * 0.001)
+          and
+          (
+            sum(rate(http_requests_total{code=~"5.."}[5m]))
+            / sum(rate(http_requests_total[5m]))
+          ) > (14.4 * 0.001)
+        labels:
+          severity: page
+        annotations:
+          summary: Error budget burning fast

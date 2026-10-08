@@ -1,0 +1,9 @@
+name: Homelab Kubernetes Deploy
+summary: One terraform apply that clones VMs on Proxmox and configures them into a Kubernetes 1.33 cluster with Calico and Multus.
+github: Virgile-Ron-Darmon/homelab-k8s-deploy
+order: 1
+
+tabs:
+  - type: description
+    source: readme
+  - type: code

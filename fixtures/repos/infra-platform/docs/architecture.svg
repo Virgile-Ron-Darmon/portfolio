@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" font-family="ui-monospace, monospace" font-size="13">
+  <rect width="640" height="220" fill="#12151a"/>
+  <g fill="none" stroke="#3a424d" stroke-width="1.5">
+    <rect x="20" y="70" width="140" height="70" rx="6"/>
+    <rect x="250" y="20" width="140" height="70" rx="6"/>
+    <rect x="250" y="130" width="140" height="70" rx="6"/>
+    <rect x="480" y="70" width="140" height="70" rx="6"/>
+    <path d="M160 105 H205 V55 H250 M205 105 V165 H250 M390 55 H435 V105 H480 M390 165 H435 V105"/>
+  </g>
+  <g fill="#c9d1d9" text-anchor="middle">
+    <text x="90" y="110">network</text>
+    <text x="320" y="60">compute</text>
+    <text x="320" y="170">dns</text>
+    <text x="550" y="110">ansible</text>
+  </g>
+  <g fill="#7d8590" text-anchor="middle" font-size="11">
+    <text x="90" y="128">vpc, subnets, nat</text>
+    <text x="320" y="78">nodes, volumes</text>
+    <text x="320" y="188">zones, records</text>
+    <text x="550" y="128">base config</text>
+  </g>
+</svg>

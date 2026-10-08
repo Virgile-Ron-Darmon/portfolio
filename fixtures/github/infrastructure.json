@@ -1,0 +1,8 @@
+{
+  "private": false,
+  "default_branch": "main",
+  "commit_message": "network: move NAT to a dedicated subnet",
+  "commit_hours_ago": 30,
+  "languages": { "HCL": 61840, "Shell": 18610, "Python": 12240, "Makefile": 3110 },
+  "run": { "status": "completed", "conclusion": "success", "name": "plan", "head_branch": "main", "run_started_at_minutes_ago": 1790, "duration_sec": 192 }
+}
