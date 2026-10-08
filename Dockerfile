@@ -44,6 +44,11 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN \
  && npm prune --omit=dev --no-audit --no-fund
 
 FROM base AS runner
+# The app runs with plain node, so the package managers bundled in the base image
+# are dead weight and the source of most scanner findings. Remove them.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+           /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
 ARG PORTFOLIO_MODE=live
 ENV NODE_ENV=production \
     PORTFOLIO_MODE=${PORTFOLIO_MODE} \
