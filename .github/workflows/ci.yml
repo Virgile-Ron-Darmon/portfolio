@@ -128,6 +128,7 @@ jobs:
       - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
         with:
           advanced-security: false # print findings and fail, instead of uploading SARIF
+          inputs: .github # only this repo's own workflows and Dependabot config, not fixtures/
 
   dependency-review:
     name: Dependency review

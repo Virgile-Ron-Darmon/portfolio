@@ -4,6 +4,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7 # let new releases age a week before proposing them
     groups:
       minor-and-patch:
         update-types: [minor, patch]
@@ -12,6 +14,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7 # let new releases age a week before proposing them
     groups:
       actions:
         patterns: ["*"]
@@ -20,3 +24,5 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7 # let new releases age a week before proposing them
