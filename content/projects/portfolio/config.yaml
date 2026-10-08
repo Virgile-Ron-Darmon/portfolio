@@ -1,0 +1,9 @@
+name: Homelab Platform
+summary: The code for this website
+github: Virgile-Ron-Darmon/portfolio
+order: 3
+
+tabs:
+  - type: description
+    source: readme
+  - type: code

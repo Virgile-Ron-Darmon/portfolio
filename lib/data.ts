@@ -29,7 +29,9 @@ const toSummary = (p: Project): ProjectSummary => ({
 
 export async function listProjects(): Promise<ProjectSummary[]> {
   const projects = getAllProjects();
-  return unstable_cache(async () => projects.map(toSummary), ["projects", ...projects.map((p) => p.slug)], {
+  // Each sync writes a new syncedAt, so a sync always produces a fresh cache entry.
+  const versions = projects.map((p) => `${p.slug}@${readProjectData(p.slug)?.syncedAt ?? "none"}`);
+  return unstable_cache(async () => projects.map(toSummary), ["projects", ...versions], {
     tags: ["projects", ...projects.map((p) => projectTag(p.slug))],
   })();
 }

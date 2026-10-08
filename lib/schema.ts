@@ -58,16 +58,20 @@ export const siteConfigSchema = z.object({
 });
 export type SiteConfig = z.infer<typeof siteConfigSchema>;
 
+const side = z.enum(["top", "right", "bottom", "left"]);
+
 export const infraConfigSchema = z.object({
   nodes: z.array(
     z.object({
       id: z.string(),
       label: z.string(),
-      kind: z.enum(["edge", "app", "service", "data", "observability", "external"]),
+      kind: z.enum(["edge", "app", "service", "data", "observability", "external", "switch", "server"]),
       x: z.number(),
       y: z.number(),
       detail: z.string(),
       tech: z.string().optional(),
+      /** Any CSS colour. Overrides the kind's colour for the dot and border. */
+      color: z.string().optional(),
     }),
   ),
   edges: z.array(
@@ -76,7 +80,14 @@ export const infraConfigSchema = z.object({
       to: z.string(),
       label: z.string().optional(),
       flow: z.boolean().default(true),
+      fromSide: side.default("right"),
+      toSide: side.default("left"),
+      style: z.enum(["solid", "dashed", "dotted"]).default("solid"),
+      double: z.boolean().default(false),
+      /** Any CSS colour. */
+      color: z.string().optional(),
     }),
   ),
 });
 export type InfraConfig = z.infer<typeof infraConfigSchema>;
+export type InfraSide = z.infer<typeof side>;

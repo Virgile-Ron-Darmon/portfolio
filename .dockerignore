@@ -1,0 +1,22 @@
+.git
+.github
+node_modules
+.next
+out
+coverage
+.cache
+*.log
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets never go into the build context
+.env
+.env.*
+*.pem
+*.key
+
+Dockerfile
+.dockerignore
+.DS_Store
+.vscode
+.idea

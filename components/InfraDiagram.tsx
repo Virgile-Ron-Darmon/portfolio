@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import {
   BaseEdge,
   Controls,
@@ -16,12 +16,21 @@ import {
 } from "@xyflow/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "lucide-react";
-import type { InfraConfig } from "@/lib/schema";
+import type { InfraConfig, InfraSide } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
 type Kind = InfraConfig["nodes"][number]["kind"];
+type EdgeConfig = InfraConfig["edges"][number];
 type InfraNodeData = InfraConfig["nodes"][number] & { dimmed: boolean; selected: boolean; order: number };
-type InfraEdgeData = { label?: string; flow: boolean; dimmed: boolean; active: boolean };
+type InfraEdgeData = {
+  label?: string;
+  flow: boolean;
+  dimmed: boolean;
+  active: boolean;
+  lineStyle: EdgeConfig["style"];
+  double: boolean;
+  color?: string;
+};
 
 const KIND: Record<Kind, { color: string; label: string }> = {
   external: { color: "#8a939e", label: "external" },
@@ -30,10 +39,31 @@ const KIND: Record<Kind, { color: string; label: string }> = {
   service: { color: "#5fd38d", label: "service" },
   data: { color: "#e6d2a2", label: "data" },
   observability: { color: "#7fd1d1", label: "observability" },
+  switch: { color: "#8ab4f8", label: "switch" },
+  server: { color: "#5fd38d", label: "server" },
 };
+
+const SIDES: ReadonlyArray<readonly [InfraSide, Position]> = [
+  ["top", Position.Top],
+  ["right", Position.Right],
+  ["bottom", Position.Bottom],
+  ["left", Position.Left],
+];
+
+const HANDLE_CLASS = "!size-1.5 !min-w-0 !border-0 !bg-transparent";
+
+const DASHES: Record<EdgeConfig["style"], string | undefined> = {
+  solid: undefined,
+  dashed: "6 5",
+  dotted: "1.5 4",
+};
+
+/** Matches the canvas behind the edges (bg-panel/40 on top of bg), so the gap in a double line looks empty. */
+const CANVAS_BG = "color-mix(in srgb, var(--color-panel) 40%, var(--color-bg))";
 
 function InfraNode({ data }: NodeProps<Node<InfraNodeData>>) {
   const k = KIND[data.kind];
+  const accent = data.color ?? k.color;
   const reduce = useReducedMotion();
   return (
     <motion.div
@@ -44,15 +74,27 @@ function InfraNode({ data }: NodeProps<Node<InfraNodeData>>) {
         "w-[200px] cursor-pointer rounded-md border bg-panel px-3.5 py-3 text-left transition-[border-color,box-shadow]",
         data.selected ? "border-fg/70 shadow-[0_0_0_3px_rgba(216,221,227,0.08)]" : "border-line-strong hover:border-muted",
       )}
+      style={
+        data.color
+          ? {
+              borderColor: data.selected ? undefined : `color-mix(in srgb, ${data.color} 55%, transparent)`,
+              background: `color-mix(in srgb, ${data.color} 8%, var(--color-panel))`,
+            }
+          : undefined
+      }
     >
-      <Handle type="target" position={Position.Left} className="!size-1.5 !min-w-0 !border-0 !bg-transparent" />
+      {SIDES.map(([side, pos]) => (
+        <Fragment key={side}>
+          <Handle type="source" id={`${side}-s`} position={pos} className={HANDLE_CLASS} />
+          <Handle type="target" id={`${side}-t`} position={pos} className={HANDLE_CLASS} />
+        </Fragment>
+      ))}
       <div className="flex items-center gap-2 font-mono text-[11px] text-dim">
-        <span className="size-1.5 rounded-full" style={{ backgroundColor: k.color }} />
+        <span className="size-1.5 rounded-full" style={{ backgroundColor: accent }} />
         {k.label}
       </div>
       <div className="mt-1.5 font-mono text-[14px] text-fg">{data.label}</div>
       {data.tech && <div className="mt-0.5 font-mono text-[11px] text-muted">{data.tech}</div>}
-      <Handle type="source" position={Position.Right} className="!size-1.5 !min-w-0 !border-0 !bg-transparent" />
     </motion.div>
   );
 }
@@ -60,16 +102,32 @@ function InfraNode({ data }: NodeProps<Node<InfraNodeData>>) {
 function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: EdgeProps<Edge<InfraEdgeData>>) {
   const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
   const reduce = useReducedMotion();
-  const stroke = data?.active ? "var(--color-fg)" : "var(--color-line-strong)";
+  const active = !!data?.active;
+  const double = !!data?.double;
+  const stroke = data?.color ?? (active ? "var(--color-fg)" : "var(--color-line-strong)");
+  const width = double ? (active ? 5 : 4) : active ? 1.5 : 1;
   return (
     <>
       <BaseEdge
         id={id}
         path={path}
-        style={{ stroke, strokeWidth: data?.active ? 1.5 : 1, opacity: data?.dimmed ? 0.25 : 1, transition: "opacity .2s, stroke .2s" }}
+        style={{
+          stroke,
+          strokeWidth: width,
+          strokeDasharray: DASHES[data?.lineStyle ?? "solid"],
+          opacity: data?.dimmed ? 0.25 : 1,
+          transition: "opacity .2s, stroke .2s",
+        }}
       />
+      {double && (
+        <path
+          d={path}
+          fill="none"
+          style={{ stroke: CANVAS_BG, strokeWidth: active ? 2 : 1.5, pointerEvents: "none" }}
+        />
+      )}
       {data?.flow && !reduce && !data.dimmed && (
-        <circle r="2.5" fill={data.active ? "var(--color-ok)" : "var(--color-muted)"}>
+        <circle r="2.5" fill={active ? "var(--color-ok)" : "var(--color-muted)"}>
           <animateMotion dur={`${2.2 + (id.length % 5) * 0.35}s`} repeatCount="indefinite" path={path} />
         </circle>
       )}
@@ -78,7 +136,7 @@ function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targ
           <div
             className={cn(
               "pointer-events-none absolute rounded-sm bg-bg px-1.5 font-mono text-[10.5px] transition-opacity",
-              data.active ? "text-fg" : "text-dim",
+              active ? "text-fg" : "text-dim",
               data.dimmed && "opacity-25",
             )}
             style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
@@ -125,8 +183,18 @@ export function InfraDiagram({ config }: { config: InfraConfig }) {
       id: `e${i}-${e.from}-${e.to}`,
       source: e.from,
       target: e.to,
+      sourceHandle: `${e.fromSide}-s`,
+      targetHandle: `${e.toSide}-t`,
       type: "flow",
-      data: { label: e.label, flow: e.flow, active, dimmed: !!selected && !active },
+      data: {
+        label: e.label,
+        flow: e.flow,
+        active,
+        dimmed: !!selected && !active,
+        lineStyle: e.style,
+        double: e.double,
+        color: e.color,
+      },
     };
   });
 
@@ -179,7 +247,10 @@ export function InfraDiagram({ config }: { config: InfraConfig }) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="flex items-center gap-2 font-mono text-[11px] text-dim">
-                  <span className="size-1.5 rounded-full" style={{ backgroundColor: KIND[current.kind].color }} />
+                  <span
+                    className="size-1.5 rounded-full"
+                    style={{ backgroundColor: current.color ?? KIND[current.kind].color }}
+                  />
                   {KIND[current.kind].label}
                   {current.tech ? `, ${current.tech}` : ""}
                 </p>

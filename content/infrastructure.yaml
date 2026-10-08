@@ -1,72 +1,76 @@
-# The diagram on /infrastructure. Positions are in pixels on the canvas.
-# kind: edge | app | service | data | observability | external
+# Lab network. Positions are in pixels on the canvas.
 nodes:
-  - id: visitors
-    label: Visitors
-    kind: external
+  # Switches, top to bottom
+  - id: crs504
+    label: CRS504
+    kind: switch
+    tech: MikroTik
+    color: "#3b82f6"
     x: 0
-    y: 200
-    detail: Everyone reading this page. Requests arrive over HTTPS only.
-  - id: github
-    label: GitHub
-    kind: external
+    y: 0
+    detail: Core switch. 10G and 25G links to the servers, 2x10G uplink to the CRS309.
+  - id: crs309
+    label: CRS309
+    kind: switch
+    tech: MikroTik
     x: 0
+    y: 260
+    detail: Aggregation switch between the core and the 1G access layer.
+  - id: hp1920
+    label: HP 1920
+    kind: switch
+    tech: HPE
+    x: 0
+    y: 520
+    detail: 1G access switch. Single 1G link to each server.
+
+  # Servers
+  - id: local1
+    label: local1
+    kind: server
+    tech: Proxmox
+    color: "#e45c00"
+    x: 450
+    y: 40
+    detail: Proxmox node. 2x10G to the CRS504 and 1G to the HP 1920.
+  - id: local2
+    label: local2
+    kind: server
+    tech: Proxmox
+    color: "#e45c00"
+    x: 450
+    y: 180
+    detail: Proxmox node. 2x10G to the CRS504 and 1G to the HP 1920.
+  - id: local3
+    label: local3
+    kind: server
+    tech: Proxmox
+    color: "#e45c00"
+    x: 450
+    y: 320
+    detail: Proxmox node. 2x25G to the CRS504 and 1G to the HP 1920.
+  - id: local4
+    label: local4
+    kind: server
+    tech: Proxmox
+    color: "#e45c00"
+    x: 450
     y: 460
-    detail: Sends signed push and workflow_run webhooks. Code, README and language stats refresh on push; CI status refreshes when a run completes.
-  - id: proxy
-    label: Reverse proxy
-    kind: edge
-    tech: Caddy
-    x: 280
-    y: 200
-    detail: Terminates TLS with automatic certificates and routes each hostname to its service.
-  - id: portfolio
-    label: Portfolio
-    kind: app
-    tech: Next.js
-    x: 580
-    y: 40
-    detail: This site. Serves pages from local data and receives GitHub webhooks to trigger syncs.
-  - id: demos
-    label: Demo service
-    kind: app
-    tech: Containers
-    x: 580
-    y: 230
-    detail: Interactive project demos, isolated on their own origin with resource limits and no access to the portfolio's data.
-  - id: grafana
-    label: Grafana
-    kind: observability
-    x: 580
-    y: 420
-    detail: Public dashboards embedded on the metrics page. Anonymous visitors only see dashboards meant to be public.
-  - id: runtime
-    label: Runtime data
-    kind: data
-    tech: /var/portfolio
-    x: 900
-    y: 40
-    detail: Git clones of each project plus one JSON file per project with languages, CI status and the file manifest.
-  - id: prometheus
-    label: Prometheus
-    kind: observability
-    x: 900
-    y: 300
-    detail: Scrapes metrics from the portfolio, the demo service and the host every 15 seconds.
-  - id: loki
-    label: Loki
-    kind: observability
-    x: 900
-    y: 500
-    detail: Collects logs from every container for debugging and alerting.
+    detail: Proxmox node. 2x10G to the CRS504 and 1G to the HP 1920.
+
 edges:
-  - { from: visitors, to: proxy, label: https }
-  - { from: github, to: proxy, label: webhooks }
-  - { from: proxy, to: portfolio }
-  - { from: proxy, to: demos }
-  - { from: proxy, to: grafana }
-  - { from: portfolio, to: runtime, label: read / sync }
-  - { from: portfolio, to: prometheus, label: metrics }
-  - { from: demos, to: prometheus, label: metrics }
-  - { from: grafana, to: prometheus, label: query }
-  - { from: grafana, to: loki, label: query }
+  # Switch to switch
+  - { from: crs504, to: crs309, label: 2x10G, fromSide: bottom, toSide: top, double: true }
+  - { from: crs309, to: hp1920, label: 2x1G, fromSide: bottom, toSide: top, double: true }
+
+  # Servers to CRS504
+  - { from: crs504, to: local1, label: 2x10G, double: true }
+  - { from: crs504, to: local2, label: 2x10G, double: true }
+  - { from: crs504, to: local3, label: 2x25G, double: true, color: "#f59e0b" }
+  - { from: crs504, to: local4, label: 2x10G, double: true }
+
+  # Servers to HP 1920
+  - { from: hp1920, to: local1, label: 1G, style: dotted }
+  - { from: hp1920, to: local2, label: 1G, style: dotted }
+  - { from: hp1920, to: local3, label: 1G, style: dotted }
+  - { from: hp1920, to: local4, label: 1G, style: dotted }

@@ -5,7 +5,7 @@ const frameOrigins = [process.env.DEMO_ORIGIN, process.env.GRAFANA_ORIGIN]
   .join(" ");
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["10.0.0.*", "10.200.0.*"],
+  allowedDevOrigins: ["10.0.*.*", "10.200.0.*"],
   async headers() {
     return [
       {

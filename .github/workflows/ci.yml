@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+
+jobs:
+  build:
+    name: Typecheck, audit, build, secrets
+    runs-on: ubuntu-24.04
+    env:
+      # Mock mode has no fixtures for the real projects, so the build syncs the real repos.
+      PORTFOLIO_MODE: live
+      # Read-only token, used only to raise the GitHub API rate limit during the sync.
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history, so Gitleaks sees every commit
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Build (runs the sync first)
+        run: npm run build
+
+      - name: Install Gitleaks
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/gitleaks.tgz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tgz" -C "$RUNNER_TEMP" gitleaks
+
+      - name: Scan this repository's history for secrets
+        run: '"$RUNNER_TEMP/gitleaks" git . --redact --no-banner -v --exit-code 1'
+
+      # The site republishes files from other repos. This copies exactly the files
+      # the sync decided to publish (the manifests) and scans them, so a secret that
+      # slips past the deny list in lib/code-filter.ts fails the build.
+      - name: Collect the files the site would publish
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import os from "node:os";
+            import path from "node:path";
+            const home = process.env.PORTFOLIO_HOME || path.join(os.homedir(), ".portfolio");
+            const out = process.argv[1];
+            let count = 0;
+            for (const name of fs.readdirSync(path.join(home, "data")).filter((f) => f.endsWith(".json"))) {
+              const data = JSON.parse(fs.readFileSync(path.join(home, "data", name), "utf8"));
+              for (const entry of data.manifest) {
+                const dest = path.join(out, data.slug, entry.path);
+                fs.mkdirSync(path.dirname(dest), { recursive: true });
+                fs.copyFileSync(path.join(home, "repos", data.slug, entry.path), dest);
+                count++;
+              }
+            }
+            console.log(`collected ${count} published files`);
+          ' "$RUNNER_TEMP/published"
+
+      - name: Scan published files for secrets
+        run: '"$RUNNER_TEMP/gitleaks" dir "$RUNNER_TEMP/published" --redact --no-banner -v --exit-code 1'
+
+  docker:
+    name: Docker image build and scan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build image (not pushed)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          push: false
+          tags: portfolio:ci
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
+
+      # Scans OS and npm packages in the final image, plus any secrets baked into it
+      # (which includes the cloned repos under /var/portfolio, published or not).
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: portfolio:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+  workflows:
+    name: Lint GitHub Actions workflows
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          advanced-security: false # print findings and fail, instead of uploading SARIF
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
