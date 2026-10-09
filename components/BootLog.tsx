@@ -49,7 +49,7 @@ export function BootLog({
     let seen = false;
     try {
       seen = sessionStorage.getItem(SEEN_KEY) === "1";
-      sessionStorage.setItem(SEEN_KEY, "1");
+      // sessionStorage.setItem(SEEN_KEY, "1");
     } catch {}
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (seen || reduce) {
@@ -75,6 +75,17 @@ export function BootLog({
   const visibleLines = t < cmdEnd ? 0 : Math.floor((t - cmdEnd) / LINE_MS) + 1;
   const typedName = t < linesEnd ? "" : name.slice(0, Math.floor((t - linesEnd) / NAME_CHAR_MS) + 1);
   const done = t >= total;
+
+
+  // Only mark the intro as seen once it has finished or been skipped, so an
+  // interrupted run (or React Strict Mode's throwaway first mount) doesn't count.
+  useEffect(() => {
+    if (!done) return;
+    try {
+      sessionStorage.setItem(SEEN_KEY, "1");
+    } catch {}
+  }, [done]);
+
 
   return (
     <section aria-label="Introduction" onClick={done ? undefined : skip} className="relative pt-16 sm:pt-24">
