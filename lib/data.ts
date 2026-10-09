@@ -40,6 +40,9 @@ export async function getProjectView(slug: string) {
   const project = getProjectBySlug(slug);
   if (!project) return null;
 
+    // Each sync writes a new syncedAt, so a sync always produces a fresh cache entry.
+    const syncedAt = readProjectData(slug)?.syncedAt ?? "none";
+
   return unstable_cache(
     async () => {
       const data = readProjectData(slug);
@@ -67,7 +70,7 @@ export async function getProjectView(slug: string) {
         descriptionHtml,
       };
     },
-    ["project-view", slug],
+    ["project-view", slug, syncedAt],
     { tags: [projectTag(slug)] },
   )();
 }
